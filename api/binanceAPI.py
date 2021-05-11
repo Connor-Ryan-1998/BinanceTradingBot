@@ -4,6 +4,7 @@ from datetime import datetime, date, timedelta
 import time
 
 class BinanceData():
+    #region Constructor
     def __init__(self, symbol, interval = '1d', startTime = date.today() - timedelta(30), url = 'https://api.binance.com/api/v3/'):
         self.symbol = symbol
         self.interval = interval
@@ -16,7 +17,8 @@ class BinanceData():
 
     def __str__(self):
         return f"BinanceData: {self.symbol} {self.interval}"
-
+    #endregion
+    
     def userData(self):
         url = self.url + 'ticker/price?symbol=' + self.symbol
         df = pd.read_json(url, typ='series')
