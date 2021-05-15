@@ -1,6 +1,7 @@
 import api.binanceAPI as bAPI
 import calculations.calculationMethods as cM
 import libraries.dataVisualisations as dV
+import variables as v
 import time
 import os
 
@@ -11,10 +12,10 @@ def main():
         
 def AutoTrade():
     ## Trading Token to => TODO: make BTCAUD env variable
-    binanceBTCAUD = bAPI.BinanceData('BTCAUD')
+    binanceBTCAUD = bAPI.BinanceData('BTCAUD', apiKey = os.getenv(v.APIKey), secretKey=os.getenv(v.secretKey))
 
     ## User Data
-
+    print(binanceBTCAUD.userDataAccount())
     ## Open Close for last month into dataframe
     monthbinanceBTCAUD = binanceBTCAUD.MonthlyData()[['Opentime','Open', 'Close']]
 
@@ -25,7 +26,6 @@ def AutoTrade():
 
     ## LiveData
     print(binanceBTCAUD.LiveData())
-
 
     ## Data visualisation
     # dV.BinanceDataVisualisation(monthbinanceBTCAUD).BinanceDataGenericChart()
