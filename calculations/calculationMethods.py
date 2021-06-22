@@ -28,3 +28,4 @@ class CalculationMethods():
     def SpotSellDataframe(self):
         self.dataFrame['SpotSellForDay'] = self.dataFrame['7_Day_Moving_Average'] * 1.02
         return self.dataFrame
+

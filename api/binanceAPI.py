@@ -1,7 +1,7 @@
 # Imports
 import pandas as pd
 from datetime import datetime, date, timedelta
-import time, hmac, requests, hashlib, json, urllib.parse
+import time, hmac, requests, hashlib, json, urllib.parse, logging
 
 
 class BinanceData():
@@ -46,7 +46,7 @@ class BinanceData():
         if response.status_code == 200:
             return json.loads(response.content.decode('utf-8'))
         else:
-            return "Failed to retrieve Account Data: " + response.status_code 
+            return "Failed to retrieve Account Data: " + str(response.status_code) 
 
     def userDataOpenOrders(self):
         servertime = requests.get("https://api.binance.com/api/v1/time")
@@ -60,7 +60,7 @@ class BinanceData():
         hashedsig = hmac.new(self.secretKey.encode('utf-8'), params.encode('utf-8'), 
         hashlib.sha256).hexdigest()
 
-        response = requests.get(self.url + "account",
+        response = requests.get(self.url + "openOrders",
             params = {
                 "timestamp" : servertimeint,
                 "signature" : hashedsig,      
@@ -72,7 +72,7 @@ class BinanceData():
         if response.status_code == 200:
             return json.loads(response.content.decode('utf-8'))
         else:
-            return "Failed to retrieve Order Data Data: " + response.status_code 
+            return "Failed to retrieve Order Data Data: " + str(response.status_code)
     #endregion
     #region Binance Data
     def MonthlyData(self):
@@ -94,6 +94,64 @@ class BinanceData():
         df.to_frame()
         return df
     #endregion
-    #region Market Orders
+    #region Market Orders  
+    def userDataSetBuyOrder(self):
+        servertime = requests.get("https://api.binance.com/api/v1/time")
+        servertimeobject = json.loads(servertime.text)
+        servertimeint = servertimeobject['serverTime']
+
+        params = urllib.parse.urlencode({
+            "timestamp" : servertimeint,
+        }) 
+        hashedsig = hmac.new(self.secretKey.encode('utf-8'), params.encode('utf-8'), hashlib.sha256).hexdigest()
+        response = requests.post(self.url + "order/test",
+            params = {
+                "symbol"    : self.symbol,
+                "side"      : "BUY",
+                "type"      : "MARKET",
+                "quoteOrderQty"     : "300",
+                "timestamp" : servertimeint,
+                "recvWindow" : "10000",
+                "signature" : hashedsig,      
+            }, 
+            headers = {
+                "X-MBX-APIKEY" : self.apiKey,
+            }
+        )
+        if response.status_code == 200:
+            return json.loads(response.content.decode('utf-8'))
+        else:
+            return "Failed to Execute Buy Order: " + str(response.status_code) + " => " + str(response.content)      
+
+    def userDataSetSellOrder(self, sellPrice):
+        servertime = requests.post("https://api.binance.com/api/v1/time")
+        servertimeobject = json.loads(servertime.text)
+        servertimeint = servertimeobject['serverTime']
+
+        params = urllib.parse.urlencode({
+            "timestamp" : servertimeint,
+        })
+
+        hashedsig = hmac.new(self.secretKey.encode('utf-8'), params.encode('utf-8'), 
+        hashlib.sha256).hexdigest()
+
+        response = requests.post(self.url + "order/test",
+            params = {
+                "symbol"    : self.symbol,
+                "side"      : "SELL",
+                "type"      : "LIMIT",
+                "quoteOrderQty"     : "300",
+                "timestamp" : servertimeint,
+                "recvWindow" : "10000",
+                "signature" : hashedsig,      
+            }, 
+            headers = {
+                "X-MBX-APIKEY" : self.apiKey,
+            }
+        )
+        if response.status_code == 200:
+            return json.loads(response.content.decode('utf-8'))
+        else:
+            return "Failed to Execute Sell order: " + str(response.status_code) + " => " + str(response.content)      
     #endregion
     
