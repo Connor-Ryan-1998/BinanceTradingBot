@@ -101,6 +101,7 @@ class BinanceData():
         servertimeint = servertimeobject['serverTime']
 
         params = urllib.parse.urlencode({
+            "recvWindow" : "5000",
             "timestamp" : servertimeint,
         }) 
         hashedsig = hmac.new(self.secretKey.encode('utf-8'), params.encode('utf-8'), hashlib.sha256).hexdigest()
@@ -111,7 +112,6 @@ class BinanceData():
                 "type"      : "MARKET",
                 "quoteOrderQty"     : "300",
                 "timestamp" : servertimeint,
-                "recvWindow" : "10000",
                 "signature" : hashedsig,      
             }, 
             headers = {
