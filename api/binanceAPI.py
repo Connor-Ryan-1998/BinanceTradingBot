@@ -95,7 +95,7 @@ class BinanceData():
         return df
     #endregion
     #region Market Orders  
-    def userDataSetBuyOrder(self):
+    def userDataSetBuyOrder(self, buyPrice):
         servertime = requests.get("https://api.binance.com/api/v1/time")
         servertimeobject = json.loads(servertime.text)
         servertimeint = servertimeobject['serverTime']
@@ -126,34 +126,36 @@ class BinanceData():
         else:
             return "Failed to Execute Buy Order: " + str(response.status_code) + " => " + str(response.content)  
 
-    def userDataSetSellOrder(self, sellPrice):
-        servertime = requests.post("https://api.binance.com/api/v1/time")
+    def userDataSetSellOrder(self, sellPrice):     
+        servertime = requests.get("https://api.binance.com/api/v1/time")
         servertimeobject = json.loads(servertime.text)
         servertimeint = servertimeobject['serverTime']
 
-        params = urllib.parse.urlencode({
-            "timestamp" : servertimeint,
-        })
-
-        hashedsig = hmac.new(self.secretKey.encode('utf-8'), params.encode('utf-8'), 
-        hashlib.sha256).hexdigest()
-
-        response = requests.post(self.url + "order/test",
-            params = {
+        params = {
                 "symbol"    : self.symbol,
                 "side"      : "SELL",
-                "type"      : "LIMIT",
-                "quoteOrderQty"     : "300",
-                "timestamp" : servertimeint,
-                "recvWindow" : "10000",
-                "signature" : hashedsig,      
-            }, 
-            headers = {
-                "X-MBX-APIKEY" : self.apiKey,
+                "type"      : "MARKET",
+                "quoteOrderQty"     : "300"
+                # "type"      : "LIMIT",
+                # "quoteOrderQty"     : "300",  
             }
-        )
+        query_string = urllib.parse.urlencode(params, True)
+        if query_string:
+            query_string = "{}&timestamp={}".format(query_string, servertimeint)
+        else:
+            query_string = 'timestamp={}'.format(servertimeint)
+        hashedsig = hmac.new(self.secretKey.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
+        url = self.url  + "order/test" + '?' + query_string + '&signature=' + hashedsig
+
+        params = {'url': url, 'params': {}}
+        session = requests.Session()
+        session.headers.update({
+            'Content-Type': 'application/json;charset=utf-8',
+            'X-MBX-APIKEY': self.apiKey
+        })
+        response = session.post(**params)
         if response.status_code == 200:
             return json.loads(response.content.decode('utf-8'))
         else:
-            return "Failed to Execute Sell order: " + str(response.status_code) + " => " + str(response.content)      
+            return "Failed to Execute Buy Order: " + str(response.status_code) + " => " + str(response.content)     
     #endregion
