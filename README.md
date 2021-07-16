@@ -10,3 +10,16 @@ Explanation Here
 - Enable Two-factor Authentication.
 - Create a new API key.
 - Get a cryptocurrency. If its symbol is not in the default list, add it.
+
+## Local Config
+
+- Build a variables.py file
+- Add below
+
+```
+import os
+
+os.environ["APIKey"] = 'ApiKeyHere'
+os.environ["secretKey"] = 'secretKeyHere'
+os.environ["coinToken"] = 'BTCAUD'
+```

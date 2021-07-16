@@ -104,8 +104,8 @@ class BinanceData():
                 "symbol"    : self.symbol,
                 "side"      : "BUY",
                 "type"      : "MARKET",
-                "quoteOrderQty"     : "300",   
-            }
+                "quoteOrderQty"     :  str(buyPrice),   
+            } #These parameters determine we will buy "buyPrice" worth of the coin at market price 
         query_string = urllib.parse.urlencode(params, True)
         if query_string:
             query_string = "{}&timestamp={}".format(query_string, servertimeint)
@@ -135,10 +135,8 @@ class BinanceData():
                 "symbol"    : self.symbol,
                 "side"      : "SELL",
                 "type"      : "MARKET",
-                "quoteOrderQty"     : "300"
-                # "type"      : "LIMIT",
-                # "quoteOrderQty"     : "300",  
-            }
+                "quoteOrderQty"     : str(sellPrice)
+            } #These parameters determine we will sell $sellPrice worth of the coin at market price (above buy inc for trans costs)
         query_string = urllib.parse.urlencode(params, True)
         if query_string:
             query_string = "{}&timestamp={}".format(query_string, servertimeint)

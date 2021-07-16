@@ -6,19 +6,18 @@ import variables
 import time
 import os
 
-os.environ["LastTradedQuantity"] = "0" 
-os.environ["BuyStatus"] = 'True'
-os.environ["SellStatus"] = 'False'
 
 def main():
-    AutoTrade()
-    # while True:
-    #     AutoTrade()
-    #     time.sleep(2.5)
+    # AutoTrade()
+    os.environ["BuyStatus"] = 'True'
+    os.environ["SellStatus"] = 'False'
+    while True:
+        AutoTrade()
+        time.sleep(2.5)
         
 def AutoTrade():
-    ## Trading Token to => TODO: make BTCAUD env variable
-    binanceBTCAUD = bAPI.BinanceData('BTCAUD', apiKey = os.environ["APIKey"] , secretKey=os.environ["secretKey"])
+    ## Build Token Information
+    binanceBTCAUD = bAPI.BinanceData(os.environ["coinToken"] , apiKey = os.environ["APIKey"] , secretKey=os.environ["secretKey"])
 
     ## User Data
     ## Open Close for last month into dataframe
@@ -29,34 +28,35 @@ def AutoTrade():
     monthbinanceBTCAUD = cM.CalculationMethods(monthbinanceBTCAUD).SpotBuyDataframe()
     monthbinanceBTCAUD = cM.CalculationMethods(monthbinanceBTCAUD).SpotSellDataframe()
     spotBuyPrice = monthbinanceBTCAUD['SpotBuyForDay'].tail(1)
+    SpotSellForDay = monthbinanceBTCAUD['SpotSellForDay'].tail(1)
 
     ## Live Data
     livePrice = binanceBTCAUD.LiveData()['price']
 
-    # os.environ["LastTradedQuantity"] =  str(int(os.environ["LastTradedQuantity"]) + 1)
 
-    #Execute buy order if Current Price is less than Buy and no current orders exists
-    # if ((livePrice <= spotBuyPrice) and (binanceBTCAUD.userDataOpenOrders() == [] and os.environ["BuyStatus"])):
-    #     print(os.environ["LastTradedQuantity"])
-    #     binanceBTCAUD
-
-    if (binanceBTCAUD.userDataOpenOrders() == [] and bool(os.environ["BuyStatus"])):
-        print(binanceBTCAUD.userDataSetBuyOrder(buyPrice=livePrice))
-        if (binanceBTCAUD.userDataSetBuyOrder(buyPrice=livePrice) == {}): # Successful trade
+    #Execute Buy order
+    if (float(livePrice) <= float(spotBuyPrice) and binanceBTCAUD.userDataOpenOrders() == [] and os.environ["BuyStatus"] == 'True'):
+        output = binanceBTCAUD.userDataSetBuyOrder(buyPrice=300)
+        if (output == {}): # Successful trade
             os.environ["BuyStatus"] = 'False'
             os.environ["SellStatus"] = 'True'
+            print("Trade Buy Order for " + str(livePrice) + " At " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")  +  " Success ")
             return
         else:
-            print "Trade Order for " + str(livePrice) + " At " + str(datetime.now) + " Failed "
+            print("Trade Buy Order for " + str(livePrice) + " At " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")+ output[0] +  " Failed ")
             return
 
-    #Execute Sell order if current price is equal to 
-    if (binanceBTCAUD.userDataOpenOrders() != [] and bool(os.environ["SellStatus"])):
-        print(binanceBTCAUD.userDataSetSellOrder(sellPrice=livePrice))
-        print(os.environ["LastTradedQuantity"])
-        os.environ["BuyStatus"] = 'True'
-        os.environ["SellStatus"] = 'False'
-        return
+    #Execute Sell order 
+    if (float(livePrice) >= float(SpotSellForDay) and binanceBTCAUD.userDataOpenOrders() != [] and os.environ["SellStatus"] == 'False'):
+        output = binanceBTCAUD.userDataSetSellOrder(sellPrice=307)
+        if (output == {}): # Successful trade
+            os.environ["BuyStatus"] = 'True'
+            os.environ["SellStatus"] = 'False'
+            print("Trade Sell Order for " + str(livePrice) + " At " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S")  + str(output) +  " Success ")
+            return
+        else:
+            print("Trade Sell Order for " + str(livePrice) + " At " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + output[0] +  " Failed ")
+            return
         
     ## Data visualisation
     # dV.BinanceDataVisualisation(monthbinanceBTCAUD).BinanceDataGenericChart()
